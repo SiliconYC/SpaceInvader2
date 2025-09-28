@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Space Intruders 设计文档</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        --bg: #0f172a;
+        --panel: rgba(15, 23, 42, 0.92);
+        --border: rgba(148, 163, 184, 0.28);
+        --accent: #38bdf8;
+        --muted: #94a3b8;
+        --code-bg: rgba(30, 41, 59, 0.9);
+      }
+
+      body {
+        margin: 0;
+        background: radial-gradient(circle at top, #1e293b, #020617 68%);
+        color: #e2e8f0;
+        padding: clamp(18px, 4vw, 48px);
+      }
+
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+        background: var(--panel);
+        border-radius: 18px;
+        border: 1px solid var(--border);
+        box-shadow: 0 24px 72px rgba(2, 6, 23, 0.6);
+        overflow: hidden;
+      }
+
+      header {
+        padding: clamp(24px, 5vw, 48px);
+        background: linear-gradient(135deg, rgba(56, 189, 248, 0.25), rgba(14, 165, 233, 0.05));
+        border-bottom: 1px solid rgba(56, 189, 248, 0.25);
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: clamp(1.8rem, 3vw, 2.4rem);
+        color: #f8fafc;
+      }
+
+      header p {
+        margin: 12px 0 0;
+        max-width: 620px;
+        line-height: 1.6;
+        color: #cbd5f5;
+      }
+
+      section {
+        padding: clamp(20px, 4vw, 36px);
+        border-top: 1px solid rgba(148, 163, 184, 0.14);
+      }
+
+      section:first-of-type {
+        border-top: none;
+      }
+
+      h2 {
+        margin: 0 0 16px;
+        font-size: clamp(1.2rem, 2.4vw, 1.6rem);
+        color: #f1f5f9;
+      }
+
+      h3 {
+        margin: 24px 0 12px;
+        font-size: 1.1rem;
+        color: #f1f5f9;
+      }
+
+      p {
+        margin: 0 0 14px;
+        line-height: 1.7;
+      }
+
+      ul, ol {
+        margin: 0 0 16px;
+        padding-left: 20px;
+        line-height: 1.7;
+      }
+
+      code {
+        font-family: 'JetBrains Mono', 'SFMono-Regular', Menlo, Consolas, monospace;
+        background: var(--code-bg);
+        border-radius: 6px;
+        padding: 2px 6px;
+        font-size: 0.95em;
+        color: #7dd3fc;
+      }
+
+      pre {
+        background: var(--code-bg);
+        padding: 16px;
+        border-radius: 12px;
+        overflow-x: auto;
+        border: 1px solid rgba(56, 189, 248, 0.12);
+      }
+
+      .grid {
+        display: grid;
+        gap: 18px;
+      }
+
+      @media (min-width: 720px) {
+        .grid.columns-2 {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      .badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        border-radius: 999px;
+        background: rgba(56, 189, 248, 0.18);
+        color: #cffafe;
+        font-size: 0.85rem;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      footer {
+        padding: clamp(20px, 4vw, 32px);
+        background: rgba(15, 23, 42, 0.72);
+        border-top: 1px solid rgba(148, 163, 184, 0.14);
+        font-size: 0.95rem;
+        color: #94a3b8;
+      }
+
+      a {
+        color: #38bdf8;
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header>
+        <span class="badge">设计概览</span>
+        <h1>Space Intruders 前端原型 · 架构说明</h1>
+        <p>
+          本文档总结了演示项目的核心目标、功能范围、文件组织方式，以及关卡/敌人配置的结构设计。
+          透过轻量的配置驱动方案，我们可以在无需额外构建链的前提下，快速定义和扩展关卡内容。
+        </p>
+      </header>
+
+      <section>
+        <h2>项目目标与范围</h2>
+        <p>
+          当前版本聚焦于构建一个可在 Chrome 浏览器本地直接打开的 Space Intruders 克隆版，实现基础的飞船控制、敌人阵列、弹幕与碰撞判定，验证配置化关卡的可行性。
+        </p>
+        <ul>
+          <li>运行环境：双击 <code>index.html</code> ，无需本地服务器。</li>
+          <li>关卡管理：基于 <code>src/config/levels</code> 目录的模块化配置文件。</li>
+          <li>敌人定义：集中于 <code>src/config/enemies.js</code>，支持不同形态和数值。</li>
+          <li>核心体验：单人射击、得分统计、关卡切换、暂停/文档查看。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>文件组织</h2>
+        <div class="grid columns-2">
+          <div>
+            <h3>前端结构</h3>
+            <ul>
+              <li><code>index.html</code>：页面骨架、HUD、文档面板触发按钮。</li>
+              <li><code>styles/main.css</code>：整体布局、配色、设计文档面板样式。</li>
+              <li><code>src/main.js</code>：入口脚本，初始化游戏并控制文档面板。</li>
+            </ul>
+          </div>
+          <div>
+            <h3>游戏逻辑</h3>
+            <ul>
+              <li><code>src/core/</code>：游戏主循环、关卡工厂、场景管理。</li>
+              <li><code>src/entities/</code>：玩家、敌人基类与子类、子弹、特效。</li>
+              <li><code>src/systems/</code>：渲染、输入、碰撞系统。</li>
+              <li><code>src/utils/loader.js</code>：加载敌人/关卡配置数据。</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h2>关卡配置结构</h2>
+        <p>
+          关卡以模块化文件形式存在 <code>src/config/levels</code>，每个文件导出一个对象。
+          关卡列表通过 <code>index.js</code> 汇总，加载顺序即游玩顺序。
+        </p>
+        <pre><code>export default {
+  id: 'level-1',
+  name: 'Formation Primer',
+  description: '标准开局阵列，帮助玩家熟悉节奏。',
+  origin: { x: 70, y: 80 },
+  spacing: { x: 44, y: 36 },
+  grid: {
+    rows: 5,
+    cols: 11,
+    layout: [
+      ['scout', null, ...],
+      ['grunt', 'grunt', ...],
+      ...
+    ]
+  },
+  pace: {
+    baseStepInterval: 900,
+    accelerationFactor: 0.94,
+    horizontalStep: 18,
+    verticalStep: 28,
+    fireInterval: 1700,
+    simultaneousFireCap: 2
+  },
+  player: {
+    lives: 3,
+    fireCooldown: 260
+  }
+};</code></pre>
+        <p class="muted">
+          通过调整 <code>origin</code> 和 <code>spacing</code> 可控制阵列布局；
+          修改 <code>pace</code> 即可改变移动和射击节奏；
+          <code>layout</code> 数组使用敌人类型 ID 或 <code>null</code> 表示留空。
+        </p>
+      </section>
+
+      <section>
+        <h2>敌人类型与继承</h2>
+        <p>
+          敌人定义集中在 <code>src/config/enemies.js</code>，每个条目包括生命值、射速、得分、渲染矩阵等数据。
+          运行时通过 <code>LevelFactory</code> 创建不同的子类（如侦察、重装、头目），以便扩展特殊行为（摆动、缓动、护盾等）。
+        </p>
+        <ul>
+          <li><code>EnemyBase</code>：实现生命、冷却计时、网格坐标、得分等基础逻辑。</li>
+          <li>子类可在 <code>update()</code> 中调用 <code>applyOffset</code> 叠加独特运动。</li>
+          <li>新增敌人时仅需补充配置与对应子类（若无特殊行为可直接复用基类）。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>系统协作流程</h2>
+        <ol>
+          <li><strong>初始化</strong>：入口脚本加载配置，实例化 <code>Game</code>、<code>Renderer</code>、<code>InputManager</code>。</li>
+          <li><strong>关卡载入</strong>：<code>LevelFactory</code> 基于配置创建敌人阵列，注册至 <code>Scene</code>。</li>
+          <li><strong>主循环</strong>：<code>Game</code> 驱动 <code>Level</code> 和 <code>Scene</code> 更新，随后渲染当前帧。</li>
+          <li><strong>碰撞检测</strong>：<code>CollisionSystem</code> 处理子弹与实体交互，触发得分与生命变化。</li>
+          <li><strong>状态切换</strong>：依据敌人清空或玩家生命耗尽，切换到胜利/结算状态，并等待输入继续。</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>扩展与后续路线</h2>
+        <ul>
+          <li>在 <code>src/config/levels</code> 增加新文件即可扩充更多关卡。</li>
+          <li>在 <code>src/entities/types</code> 创建新子类，可实现蛇形、俯冲等特殊动作。</li>
+          <li>预留 <code>Effect</code> 与事件钩子，可引入爆炸动画、音效模块。</li>
+          <li>通过 <code>localStorage</code> 追加高分榜；或添加手柄/Gamepad 输入模块。</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>本地运行说明</h2>
+        <p>
+          在 macOS 上直接双击项目根目录的 <code>index.html</code>，选择 Chrome 打开即可。
+          若需要调试 Fetch 或跨源资源，可选用 <code>python3 -m http.server</code> 启动本地服务器，但对试玩并非必需。
+        </p>
+        <p>
+          若要验证关卡配置修改，可刷新页面或在控制台调用 <code>SpaceIntruders.game.start()</code> 重新加载。
+        </p>
+      </section>
+
+      <footer>
+        Space Intruders Demo · 设计文档。欢迎基于以上结构添加更多敌人或关卡，持续验证配置驱动的可扩展性。
+      </footer>
+    </main>
+  </body>
+</html>
